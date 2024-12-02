@@ -7,4 +7,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Reference Include="AdventOfCode2024Input">
+        <HintPath>..\AdventOfCode2024Input\AdventOfCode2024Input\bin\Release\net6.0\AdventOfCode2024Input.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>
