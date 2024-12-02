@@ -2,4 +2,4 @@
 
 Console.WriteLine("Advent of Code 2024");
 Console.WriteLine("");
-Day1.Run();
+Day2.Run();
