@@ -9,43 +9,64 @@ public static class Day2
         Console.WriteLine("Day 2 Part One");
 
         List<string> reportList = PuzzleData.GetDayTwoList();
-
+        
         int safeCount = 0;
         foreach (var report in reportList)
         {
-            Console.WriteLine($"Report: {report}");
             List<int> numbers = report.Split(" ").Select(int.Parse).ToList();
-            if (numbers[0] == numbers[1])
-            {
-                Console.WriteLine($"first numbers are not increasing or decreasing!");
-                continue;
-            }
-            bool isIncreasing = numbers[0] < numbers[1];
-            bool isSafe = true;
-            for (int i = 0; i < (numbers.Count -1); i++)
-            {
-                var diff = numbers[i] - numbers[i + 1];
-                var absDiff = Math.Abs(diff);
-                if ((diff < 0 && !isIncreasing) || (diff > 0 && isIncreasing) || (diff == 0))
-                {
-                    Console.WriteLine($"Wrong direction!");
-                    isSafe = false;
-                    break;
-                }
-                if (absDiff < 1 || absDiff > 3)
-                {
-                    Console.WriteLine($"not at least one and less than 3!");
-                    isSafe = false;
-                    break;
-                }
-            }
-
-            if (isSafe)
-            {
-                Console.WriteLine($"Report is safe.");
+            
+            if (IsSafeReport(numbers, true) || IsSafeReport(numbers, false))
                 safeCount++;
-            }
         }
         Console.WriteLine($"safeCount {safeCount}");
+
+        Console.WriteLine("");
+        Console.WriteLine("Day 2 Part Two");
+        safeCount = 0;
+        foreach (var report in reportList)
+        {
+            List<int> numbers = report.Split(" ").Select(int.Parse).ToList();
+            
+            if (TestAndFixReport(numbers))
+                safeCount++;
+        }
+        Console.WriteLine($"safeCount {safeCount}");
+    }
+
+    private static bool TestAndFixReport(List<int> record)
+    {
+        bool isSafe = IsSafeReport(record, true);
+        if (isSafe) return true;
+
+        isSafe = IsSafeReport(record, false);
+        if (isSafe) return true;
+
+        for (int i = 0; i < record.Count; i++)
+        {
+            var recordCopy = new List<int>(record);
+            recordCopy.RemoveAt(i);
+        
+            isSafe = IsSafeReport(recordCopy, true);
+            if (isSafe) return true;
+
+            isSafe = IsSafeReport(recordCopy, false);
+            if (isSafe) return true;
+        }
+        
+        return false;
+    }
+
+    private static bool IsSafeReport(List<int> record, bool isIncreasing)
+    {
+        for (int i = 0; i < (record.Count - 1); i++)
+        {
+            var diff = record[i] - record[i+1];
+            if ((diff < 0 && !isIncreasing) || (diff > 0 && isIncreasing) || (diff == 0))
+                return false;
+
+            if (Math.Abs(diff) is not (>= 1 and <= 3))
+                return false;
+        }
+        return true;
     }
 }
