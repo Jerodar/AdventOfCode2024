@@ -30,7 +30,7 @@ public static class Day5
             }
             if (isInvalid) { continue; }
             
-            int middle = (manual.Count / 2) + 1;
+            int middle = (manual.Count - 1) / 2;
             middleSum += manual[middle];
         }
 
