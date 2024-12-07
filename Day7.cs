@@ -1,4 +1,5 @@
 using AdventOfCode2024Input;
+using System.Diagnostics;
 
 namespace AdventOfCode2024;
 
@@ -35,28 +36,86 @@ public static class Day7
         Console.WriteLine("Day 7 Part Two");
         
         calibrationList = PuzzleData.GetDay7Input();
-        
-        testSum = 0;
-        foreach (var (result, inputs) in calibrationList)
+        TimeSpan time = Time(() =>
         {
-            var intermediates = new List<long>() { inputs[0] };
-            for (int i = 1; i < inputs.Count; i++)
+            testSum = 0;
+            foreach (var (result, inputs) in calibrationList)
             {
-                var nextValue = inputs[i];
-                var newIntermediates = new List<long>();
-                foreach (var intermediate in intermediates)
+                var intermediates = new List<long>() { inputs[0] };
+                for (int i = 1; i < inputs.Count; i++)
                 {
-                    newIntermediates.Add(intermediate + nextValue);
-                    newIntermediates.Add(intermediate * nextValue);
-                    newIntermediates.Add(long.Parse(intermediate.ToString() + nextValue.ToString()));
-                }
-                intermediates = newIntermediates;
-            }
+                    var nextValue = inputs[i];
+                    var newIntermediates = new List<long>();
+                    foreach (var intermediate in intermediates)
+                    {
+                        newIntermediates.Add(intermediate + nextValue);
+                        newIntermediates.Add(intermediate * nextValue);
+                        newIntermediates.Add(long.Parse(intermediate.ToString() + nextValue.ToString()));
+                    }
 
-            if (intermediates.Contains(result))
-                testSum += result;
-        }
+                    intermediates = newIntermediates;
+                }
+
+                if (intermediates.Contains(result))
+                    testSum += result;
+            }
+        });
+        
         
         Console.WriteLine($"The sum of the valid calibrations is: {testSum}");
+        Console.WriteLine($"Calculated in {time.TotalMilliseconds}ms");
+        
+        Console.WriteLine();
+        Console.WriteLine("Day 7 Part Two - optimised");
+        
+        calibrationList = PuzzleData.GetDay7Input();
+        time = Time(() =>
+        {
+            testSum = 0;
+            foreach (var (result, inputs) in calibrationList)
+            {
+                var intermediates = new List<long>() { inputs[0] };
+                var resultFound = false;
+                for (int i = 1; i < inputs.Count; i++)
+                {
+                    var nextValue = inputs[i];
+                    var newIntermediates = new List<long>();
+                    foreach (var intermediate in intermediates)
+                    {
+                        var addValue = intermediate + nextValue;
+                        var mulValue = intermediate * nextValue;
+                        var concValue = long.Parse(intermediate.ToString() + nextValue.ToString());
+                        if (addValue == result || mulValue == result || concValue == result)
+                            resultFound = true;
+                        if (addValue < result)
+                            newIntermediates.Add(addValue);
+                        if (mulValue < result)
+                            newIntermediates.Add(mulValue);
+                        if (concValue < result)
+                            newIntermediates.Add(concValue);
+                    }
+
+                    if (resultFound)
+                        break;
+                    
+                    intermediates = newIntermediates;
+                }
+
+                if (resultFound)
+                    testSum += result;
+            }
+        });
+        
+        
+        Console.WriteLine($"The sum of the valid calibrations is: {testSum}");
+        Console.WriteLine($"Calculated in {time.TotalMilliseconds}ms");
+    }
+    
+    private static TimeSpan Time(Action action)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        action();
+        stopwatch.Stop();
+        return stopwatch.Elapsed;
     }
 }
