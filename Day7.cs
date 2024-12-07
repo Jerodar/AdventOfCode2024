@@ -85,8 +85,11 @@ public static class Day7
                         var addValue = intermediate + nextValue;
                         var mulValue = intermediate * nextValue;
                         var concValue = long.Parse(intermediate.ToString() + nextValue.ToString());
-                        if (addValue == result || mulValue == result || concValue == result)
+                        if (i == inputs.Count - 1 && (addValue == result || mulValue == result || concValue == result))
+                        {
                             resultFound = true;
+                            break;
+                        }
                         if (addValue < result)
                             newIntermediates.Add(addValue);
                         if (mulValue < result)
