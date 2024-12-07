@@ -75,6 +75,7 @@ public static class Day7
             foreach (var (result, inputs) in calibrationList)
             {
                 var intermediates = new List<long>() { inputs[0] };
+                var isValid = false;
                 for (int i = 1; i < inputs.Count; i++)
                 {
                     var nextValue = inputs[i];
@@ -84,6 +85,13 @@ public static class Day7
                         var addValue = intermediate + nextValue;
                         var mulValue = intermediate * nextValue;
                         var concValue = long.Parse(intermediate.ToString() + nextValue.ToString());
+                        
+                        if (i == (inputs.Count - 1) && (addValue == result || mulValue == result || concValue == result))
+                        {
+                            isValid = true;
+                            break;
+                        }
+                        
                         if (addValue <= result)
                             newIntermediates.Add(addValue);
                         if (mulValue <= result)
@@ -95,7 +103,7 @@ public static class Day7
                     intermediates = newIntermediates;
                 }
 
-                if (intermediates.Contains(result))
+                if (isValid)
                     testSum += result;
             }
         });
