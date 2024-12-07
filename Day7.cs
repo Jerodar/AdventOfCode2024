@@ -31,5 +31,32 @@ public static class Day7
         }
         
         Console.WriteLine($"The sum of the valid calibrations is: {testSum}");
+        Console.WriteLine();
+        Console.WriteLine("Day 7 Part Two");
+        
+        calibrationList = PuzzleData.GetDay7Input();
+        
+        testSum = 0;
+        foreach (var (result, inputs) in calibrationList)
+        {
+            var intermediates = new List<long>() { inputs[0] };
+            for (int i = 1; i < inputs.Count; i++)
+            {
+                var nextValue = inputs[i];
+                var newIntermediates = new List<long>();
+                foreach (var intermediate in intermediates)
+                {
+                    newIntermediates.Add(intermediate + nextValue);
+                    newIntermediates.Add(intermediate * nextValue);
+                    newIntermediates.Add(long.Parse(intermediate.ToString() + nextValue.ToString()));
+                }
+                intermediates = newIntermediates;
+            }
+
+            if (intermediates.Contains(result))
+                testSum += result;
+        }
+        
+        Console.WriteLine($"The sum of the valid calibrations is: {testSum}");
     }
 }
