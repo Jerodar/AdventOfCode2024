@@ -13,15 +13,20 @@ public static class Day10
         var maxCol = map[0].Length;
         
         int totalScore = 0;
+        int totalRating = 0;
         for (int row = 0; row < maxRow; row++)
         {
             for (int col = 0; col < maxCol; col++)
             {
                 if (map[row][col] != '0') continue;
                 totalScore += GetTrailHeadScore(map, row, col);
+                totalRating += GetTrailHeadRating(map, row, col);
             }
         }
         Console.WriteLine($"Total score: {totalScore}");
+        Console.WriteLine();
+        Console.WriteLine("Day 10 Part Two");
+        Console.WriteLine($"Total rating: {totalRating}");
     }
 
     private static int GetTrailHeadScore(string[] map, int row, int col)
@@ -34,6 +39,13 @@ public static class Day10
             uniquePeaks.Add(visitedPeak);
 
         return uniquePeaks.Count;
+    }
+    
+    private static int GetTrailHeadRating(string[] map, int row, int col)
+    {
+        List<(int row, int col)> visitedPeaks = FindPeaks(map, row, col); 
+
+        return visitedPeaks.Count;
     }
 
     private static List<(int row, int col)> FindPeaks(string[] map, int row, int col)
