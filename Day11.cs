@@ -15,69 +15,67 @@ public static class Day11
             if (!numberCount.TryAdd(stone, 1))
                 numberCount[stone]++;
         }
-        
+
         for (int blink = 25; blink > 0; blink--)
         {
-            var newnumbers = new Dictionary<long, long>();
-            for (int i = 0; i < numberCount.Count; i++) {
-                var number = numberCount.ElementAt(i).Key;
-                if (number == 0)
-                {
-                    if (!numberCount.TryAdd(1, numberCount[0]))
-                        numberCount[1]+= numberCount[0];
-                    numberCount[0] = 0;
-                    continue;
-                }
-
-                var digits = GetDigits(number);
-                if (digits % 2 == 0)
-                {
-                    var splitter = (long)Math.Pow(10, (int)(digits/2));
-                    var lsd = number.Key / splitter;
-                    var msd = number.Key & splitter;
-                    if (!numberCount.TryAdd(lsd, 1))
-                        numberCount[lsd]++;
-                    if (!numberCount.TryAdd(msd, 1))
-                        numberCount[msd]++;
-                    numberCount[number] -= 1;
-                    continue;
-                }
-
-                
-                if (!numberCount.TryAdd(msd, 1))
-                    numberCount[msd]++;
-                stones[i] *= 2024;
-                numberCount[number] -= 1;
-            }
+            numberCount = Blink(numberCount);
         }
-        Console.WriteLine(stones.Count);
+
+        long count = 0;
+        foreach (KeyValuePair<long, long> number in numberCount)
+            count+= number.Value;
+
+        Console.WriteLine(count);
         Console.WriteLine();
+
         Console.WriteLine("Day 11 Part Two");
+
         for (int blink = 50; blink > 0; blink--)
         {
-            for (int i = stones.Count - 1; i >= 0; i--)
-            {
-                if (stones[i] == 0)
-                {
-                    stones[i] = 1;
-                    continue;
-                }
-
-                var digits = GetDigits(stones[i]);
-                if (digits % 2 == 0)
-                {
-                    var splitter = (long)Math.Pow(10, (int)(digits/2));
-                    stones.Add(stones[i] / splitter);
-                    stones[i] %= splitter;
-                    continue;
-                }
-
-                stones[i] *= 2024;
-            }
+            numberCount = Blink(numberCount);
         }
-        Console.WriteLine(stones.Count);
+
+        count = 0;
+        foreach (KeyValuePair<long, long> number in numberCount)
+            count += number.Value;
+
+        Console.WriteLine(count);
     }
-    
+
+    private static Dictionary<long, long> Blink(Dictionary<long, long> numberCount)
+    {
+        var newNumberCount = new Dictionary<long, long>();
+
+        for (int i = 0; i < numberCount.Count; i++)
+        {
+            var number = numberCount.ElementAt(i).Key;
+            if (number == 0)
+            {
+                if (!newNumberCount.TryAdd(1, numberCount[number]))
+                    newNumberCount[1] += numberCount[number];
+                continue;
+            }
+
+            var digits = GetDigits(number);
+            if (digits % 2 == 0)
+            {
+                var splitter = (long)Math.Pow(10, (int)(digits / 2));
+                var msd = number / splitter;
+                var lsd = number % splitter;
+                if (!newNumberCount.TryAdd(lsd, numberCount[number]))
+                    newNumberCount[lsd] += numberCount[number];
+                if (!newNumberCount.TryAdd(msd, numberCount[number]))
+                    newNumberCount[msd] += numberCount[number];
+                continue;
+            }
+
+            var mulResult = number * 2024;
+            if (!newNumberCount.TryAdd(mulResult, numberCount[number]))
+                newNumberCount[mulResult] += numberCount[number];
+        }
+        return newNumberCount;
+    }
+
     private static int GetDigits(long number)
     {
         var digits = number switch
@@ -103,12 +101,5 @@ public static class Day11
             _ => 19
         };
         return digits;
-    }
-
-    private static void PrintList(List<long> stones)
-    {
-        foreach (var stone in stones)
-            Console.Write(stone + " ");
-        Console.WriteLine();
     }
 }
