@@ -63,7 +63,14 @@ public static class Day13
             
             var aCoefficient = clawMachine.a.x * clawMachine.b.y - clawMachine.a.y * clawMachine.b.x;
             var rightHandSide = px * clawMachine.b.y - py * clawMachine.b.x;
-            if (rightHandSide % aCoefficient == 0) // must be integer
+            if (aCoefficient == 0) // if both buttons have the same slope, check which button is cheaper per unit moved
+            {
+                if (clawMachine.a.x > clawMachine.b.x * 3)
+                    totalCost = (px / clawMachine.a.x) * 3;
+                else
+                    totalCost = (px / clawMachine.b.x);
+            }
+            else if (rightHandSide % aCoefficient == 0) // must be integer
             {
                 var a = rightHandSide / aCoefficient;
                 var b = (px - clawMachine.a.x * a) / clawMachine.b.x;
