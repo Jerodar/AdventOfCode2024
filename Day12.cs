@@ -154,10 +154,10 @@ public static class Day12
     {
         int sides = 2; // 1 vertical and 1 horizontal side is not counted below
 
-        var verticalEdges = edges.Where(edge => edge.Direction == Dir.Up || edge.Direction == Dir.Down);
+        var verticalEdges = edges.Where(edge => edge.Direction is Dir.Up or Dir.Down);
         var sortedVertical = verticalEdges.OrderBy(edge => edge.Direction).ThenBy(edge => edge.col).ThenBy(edge => edge.row).ToList();
 
-        var horizontalEdges = edges.Where(edge => edge.Direction == Dir.Up || edge.Direction == Dir.Down);
+        var horizontalEdges = edges.Where(edge => edge.Direction is Dir.Up or Dir.Down);
         var sortedHorizontal = horizontalEdges.OrderBy(edge => edge.Direction).ThenBy(edge => edge.row).ThenBy(edge => edge.col).ToList();
 
         for (int i = 0; i < sortedVertical.Count - 1; i++)

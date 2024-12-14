@@ -6,7 +6,7 @@ public static class Day13
 {
     public static void Run()
     {
-        Console.WriteLine("Day 12 Part One");
+        Console.WriteLine("Day 13 Part One");
 
         List<((int ax, int ay),(int bx,int by), (int px,int py))> clawMachines = PuzzleData.GetDay13ClawMachines();
 
@@ -32,7 +32,7 @@ public static class Day13
         Console.WriteLine($"Total cost: {totalCost}");
         
         Console.WriteLine();
-        Console.WriteLine("Day 12 Part Two");
+        Console.WriteLine("Day 13 Part Two");
         totalCost = 0;
         foreach (((int x, int y) a, (int x, int y) b, (int x, int y) p) clawMachine in clawMachines)
         {
