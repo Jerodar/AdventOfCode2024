@@ -47,13 +47,38 @@ public static class Day16
         {
             return (from node in Nodes where node.Position.row == row && node.Position.col == col select node).FirstOrDefault();
         }
+        
+        public void CreateStraightConnections()
+        {
+            foreach (var node in Nodes)
+            {
+                var horizontalConnections = node.Connections.Where(c => c.IsHorizontal == true).ToList();
+                if (horizontalConnections.Count == 2)
+                {
+                    var newCost = horizontalConnections[0].Cost + horizontalConnections[1].Cost;
+                    var firstNode = horizontalConnections[0].ConnectedNode;
+                    var secondNode = horizontalConnections[1].ConnectedNode;
+                    firstNode.Connections.Add(new Connection() { ConnectedNode = secondNode, IsHorizontal = true, Cost = newCost});
+                    secondNode.Connections.Add(new Connection() { ConnectedNode = firstNode, IsHorizontal = true, Cost = newCost});
+                }
+                var verticalConnections = node.Connections.Where(c => c.IsHorizontal == false).ToList();
+                if (verticalConnections.Count == 2)
+                {
+                    var newCost = verticalConnections[0].Cost + verticalConnections[1].Cost;
+                    var firstNode = verticalConnections[0].ConnectedNode;
+                    var secondNode = verticalConnections[1].ConnectedNode;
+                    firstNode.Connections.Add(new Connection() { ConnectedNode = secondNode, IsHorizontal = false, Cost = newCost});
+                    secondNode.Connections.Add(new Connection() { ConnectedNode = firstNode, IsHorizontal = false, Cost = newCost});
+                }
+            }
+        }
     }
 
     public static void Run()
     {
         Console.WriteLine("Day 16 Part One");
 
-        string[] map = PuzzleData.GetDay16Map();
+        string[] map = PuzzleData.GetDay16MapTest2();
         (int row, int col) start = (0, 0);
         (int row, int col) goal = (0, 0);
 
@@ -68,16 +93,17 @@ public static class Day16
 
         var graph = new Graph();
         FillGraph(graph, map, start.row, start.col);
+        graph.CreateStraightConnections();
         DijkstraSearch(graph, start.row, start.col, goal.row, goal.col);
-        Node endNode =  graph.GetNode(goal.row, goal.col) ?? new Node();
-        
-        Console.WriteLine($"min cost is {endNode?.MinCostToStart}");
+        Node? endNodeMaybe =  graph.GetNode(goal.row, goal.col);
+        Node endNode = endNodeMaybe ?? new Node();
+        Console.WriteLine($"min cost is {endNode.MinCostToStart}");
         
         Console.WriteLine();
         Console.WriteLine("Day 16 Part Two");
         
         var traveledPaths = new HashSet<(int row, int col)>();
-        var winningConnections = (from connection in endNode!.NearestToStart where connection.Cost == endNode.NearestToStart.Min(c => c.Cost) select connection).ToList();
+        var winningConnections = (from connection in endNode.NearestToStart where connection.Cost == endNode.NearestToStart.Min(c => c.Cost) select connection).ToList();
         GetPathCount(endNode, winningConnections, traveledPaths);
         PrintMap(map, traveledPaths);
         
@@ -147,8 +173,8 @@ public static class Day16
             if (front == '#' && right == '#' && left == '#')
                 return (startRow, startCol, -1);
 
-            startRow = startRow + rowDir;
-            startCol = startCol + colDir;
+            startRow += rowDir;
+            startCol += colDir;
             cost++;
         }
     }
@@ -174,18 +200,18 @@ public static class Day16
                     var childNode = connection.ConnectedNode;
                     if (childNode.Visited) continue;
 
-                    var newCost = previousConnection.Cost + connection.Cost + (isHorizontal == connection.IsHorizontal ? 0 : 1000);
+                    var newCost = node.MinCostToStart + connection.Cost + (isHorizontal == connection.IsHorizontal ? 0 : 1000);
                     
-                    if (childNode.NearestToStart.Count > 0 && (childNode.NearestToStart[0].IsHorizontal != connection.IsHorizontal || newCost == childNode.MinCostToStart))
+                    if (childNode.NearestToStart.Count > 0 && newCost == childNode.MinCostToStart)
                     {
-                        childNode.AddNearestToStart(new Connection { ConnectedNode = node, Cost=newCost, IsHorizontal = connection.IsHorizontal });
+                        childNode.AddNearestToStart(new Connection { ConnectedNode = node, IsHorizontal = connection.IsHorizontal });
                         if (!priorityQueue.Contains(childNode))
                             priorityQueue.Add(childNode);
                     }
                     else if (childNode.NearestToStart.Count == 0 || newCost < childNode.MinCostToStart)
                     {
                         childNode.NearestToStart = new List<Connection>()
-                            { new() { ConnectedNode = node, Cost = newCost, IsHorizontal = connection.IsHorizontal } };
+                            { new() { ConnectedNode = node, IsHorizontal = connection.IsHorizontal } };
                         
                         childNode.MinCostToStart = newCost;
                         if (!priorityQueue.Contains(childNode))
@@ -205,16 +231,24 @@ public static class Day16
         {
             if (node.Position.row < connection.ConnectedNode.Position.row)
                 for (var row = node.Position.row; row < connection.ConnectedNode.Position.row; row++)
-                    traveledPaths.Add((row, node.Position.col));
+                {
+                    if(!traveledPaths.Add((row, node.Position.col))) break;
+                }
             else if (node.Position.row > connection.ConnectedNode.Position.row)
                 for (var row = node.Position.row; row > connection.ConnectedNode.Position.row; row--)
-                    traveledPaths.Add((row, node.Position.col));
+                {
+                    if(!traveledPaths.Add((row, node.Position.col))) break;
+                }
             else if (node.Position.col < connection.ConnectedNode.Position.col)
                 for (var col = node.Position.col; col < connection.ConnectedNode.Position.col; col++)
-                    traveledPaths.Add((node.Position.row, col));
+                {
+                    if (!traveledPaths.Add((node.Position.row, col))) break;
+                }
             else if (node.Position.col > connection.ConnectedNode.Position.col)
                 for (var col = node.Position.col; col > connection.ConnectedNode.Position.col; col--)
-                    traveledPaths.Add((node.Position.row, col));
+                {
+                    if(!traveledPaths.Add((node.Position.row, col))) break;
+                }
             if (connection.ConnectedNode == node)
             {
                 traveledPaths.Add(node.Position);
