@@ -50,22 +50,22 @@ public static class Day16
             foreach (var node in Nodes)
             {
                 var horizontalConnections = node.Connections.Where(c => c.IsHorizontal).ToList();
-                if (horizontalConnections.Count == 2)
+                if (horizontalConnections.Count > 1)
                 {
                     var newCost = horizontalConnections[0].Cost + horizontalConnections[1].Cost;
                     var firstNode = horizontalConnections[0].ConnectedNode;
                     var secondNode = horizontalConnections[1].ConnectedNode;
-                    firstNode.Connections.Add(new Connection() { ConnectedNode = secondNode, IsHorizontal = true, Cost = newCost});
-                    secondNode.Connections.Add(new Connection() { ConnectedNode = firstNode, IsHorizontal = true, Cost = newCost});
+                    firstNode.AddConnection(new Connection() { ConnectedNode = secondNode, IsHorizontal = true, Cost = newCost});
+                    secondNode.AddConnection(new Connection() { ConnectedNode = firstNode, IsHorizontal = true, Cost = newCost});
                 }
                 var verticalConnections = node.Connections.Where(c => !c.IsHorizontal).ToList();
-                if (verticalConnections.Count == 2)
+                if (verticalConnections.Count > 1)
                 {
                     var newCost = verticalConnections[0].Cost + verticalConnections[1].Cost;
                     var firstNode = verticalConnections[0].ConnectedNode;
                     var secondNode = verticalConnections[1].ConnectedNode;
-                    firstNode.Connections.Add(new Connection() { ConnectedNode = secondNode, IsHorizontal = false, Cost = newCost});
-                    secondNode.Connections.Add(new Connection() { ConnectedNode = firstNode, IsHorizontal = false, Cost = newCost});
+                    firstNode.AddConnection(new Connection() { ConnectedNode = secondNode, IsHorizontal = false, Cost = newCost});
+                    secondNode.AddConnection(new Connection() { ConnectedNode = firstNode, IsHorizontal = false, Cost = newCost});
                 }
             }
         }
@@ -101,7 +101,6 @@ public static class Day16
         
         var traveledPaths = new HashSet<(int row, int col)>();
         var traveledConnections = new HashSet<(int arow, int acol,int brow, int bcol)>();
-        var winningConnections = (from connection in endNode.NearestToStart where connection.Cost == endNode.NearestToStart.Min(c => c.Cost) select connection).ToList();
         GetVisitedNodes(endNode, traveledConnections);
         GetPathCount(traveledConnections, traveledPaths);
         PrintMap(map, traveledPaths);
