@@ -1,19 +1,16 @@
-using System.Xml.Schema;
 using AdventOfCode2024Input;
 
 namespace AdventOfCode2024;
 
 public static class Day16
 {
-    private const int MaxCost = 100000;
-
     private class Node
     {
-        public (int row, int col) Position { get; set; }
+        public (int row, int col) Position { get; init; }
         public List<Connection> Connections { get; } = new();
         public int MinCostToStart { get; set; }
         public List<Connection> NearestToStart { get; set; } = new();
-        public bool Visited { get; set; } = false;
+        public bool Visited { get; set; }
 
         public void AddConnection(Connection newConnection)
         {
@@ -34,9 +31,9 @@ public static class Day16
     
     private class Connection
     {
-        public Node ConnectedNode { get; set; } = new();
-        public int Cost { get; set; }
-        public bool IsHorizontal { get; set; }
+        public Node ConnectedNode { get; init; } = new();
+        public int Cost { get; init; }
+        public bool IsHorizontal { get; init; }
     }
 
     private class Graph
@@ -52,7 +49,7 @@ public static class Day16
         {
             foreach (var node in Nodes)
             {
-                var horizontalConnections = node.Connections.Where(c => c.IsHorizontal == true).ToList();
+                var horizontalConnections = node.Connections.Where(c => c.IsHorizontal).ToList();
                 if (horizontalConnections.Count == 2)
                 {
                     var newCost = horizontalConnections[0].Cost + horizontalConnections[1].Cost;
@@ -61,7 +58,7 @@ public static class Day16
                     firstNode.Connections.Add(new Connection() { ConnectedNode = secondNode, IsHorizontal = true, Cost = newCost});
                     secondNode.Connections.Add(new Connection() { ConnectedNode = firstNode, IsHorizontal = true, Cost = newCost});
                 }
-                var verticalConnections = node.Connections.Where(c => c.IsHorizontal == false).ToList();
+                var verticalConnections = node.Connections.Where(c => !c.IsHorizontal).ToList();
                 if (verticalConnections.Count == 2)
                 {
                     var newCost = verticalConnections[0].Cost + verticalConnections[1].Cost;
@@ -78,7 +75,7 @@ public static class Day16
     {
         Console.WriteLine("Day 16 Part One");
 
-        string[] map = PuzzleData.GetDay16MapTest2();
+        string[] map = PuzzleData.GetDay16Map();
         (int row, int col) start = (0, 0);
         (int row, int col) goal = (0, 0);
 
@@ -103,15 +100,13 @@ public static class Day16
         Console.WriteLine("Day 16 Part Two");
         
         var traveledPaths = new HashSet<(int row, int col)>();
+        var traveledConnections = new HashSet<(int arow, int acol,int brow, int bcol)>();
         var winningConnections = (from connection in endNode.NearestToStart where connection.Cost == endNode.NearestToStart.Min(c => c.Cost) select connection).ToList();
-        GetPathCount(endNode, winningConnections, traveledPaths);
+        GetVisitedNodes(endNode, traveledConnections);
+        GetPathCount(traveledConnections, traveledPaths);
         PrintMap(map, traveledPaths);
         
         Console.WriteLine($"traveled paths count: {traveledPaths.Count}");
-        // 595 too high
-        // 461 too low
-        // 510 too high
-        // 498 incorrect
     }
 
     private static void FillGraph(Graph graph, string[] map, int startRow, int startCol)
@@ -224,37 +219,36 @@ public static class Day16
                 return;
         } while (priorityQueue.Any());
     }
-    
-    private static void GetPathCount(Node node, List<Connection> connections, HashSet<(int row, int col)> traveledPaths)
+
+
+    private static void GetVisitedNodes(Node node, HashSet<(int arow, int acol, int brow, int bcol)> visited)
     {
-        foreach (var connection in connections)
+        foreach (var connection in node.NearestToStart)
+        { // not sure why but it was getting stuck in a loop, so as a band-aid return if trying to save an existing connection
+            if (connection.ConnectedNode == node) return;
+            if (!visited.Add((node.Position.row, node.Position.col, connection.ConnectedNode.Position.row, connection.ConnectedNode.Position.col))) return;
+            GetVisitedNodes(connection.ConnectedNode, visited);
+        }
+    }
+
+    private static void GetPathCount(HashSet<(int arow, int acol, int brow, int bcol)> visitedConnections,
+        HashSet<(int row, int col)> traveledPoints)
+    {
+        foreach (var connection in visitedConnections)
         {
-            if (node.Position.row < connection.ConnectedNode.Position.row)
-                for (var row = node.Position.row; row < connection.ConnectedNode.Position.row; row++)
-                {
-                    if(!traveledPaths.Add((row, node.Position.col))) break;
-                }
-            else if (node.Position.row > connection.ConnectedNode.Position.row)
-                for (var row = node.Position.row; row > connection.ConnectedNode.Position.row; row--)
-                {
-                    if(!traveledPaths.Add((row, node.Position.col))) break;
-                }
-            else if (node.Position.col < connection.ConnectedNode.Position.col)
-                for (var col = node.Position.col; col < connection.ConnectedNode.Position.col; col++)
-                {
-                    if (!traveledPaths.Add((node.Position.row, col))) break;
-                }
-            else if (node.Position.col > connection.ConnectedNode.Position.col)
-                for (var col = node.Position.col; col > connection.ConnectedNode.Position.col; col--)
-                {
-                    if(!traveledPaths.Add((node.Position.row, col))) break;
-                }
-            if (connection.ConnectedNode == node)
-            {
-                traveledPaths.Add(node.Position);
-                return;
-            }
-            GetPathCount(connection.ConnectedNode, connection.ConnectedNode.NearestToStart, traveledPaths);
+            traveledPoints.Add((connection.brow, connection.bcol));
+            if (connection.arow < connection.brow)
+                for (var row = connection.arow; row < connection.brow; row++)
+                    traveledPoints.Add((row, connection.acol));
+            else if (connection.arow > connection.brow)
+                for (var row = connection.arow; row > connection.brow; row--)
+                    traveledPoints.Add((row, connection.acol));
+            else if (connection.acol < connection.bcol)
+                for (var col = connection.acol; col < connection.bcol; col++)
+                    traveledPoints.Add((connection.arow, col));
+            else if (connection.acol > connection.bcol)
+                for (var col = connection.acol; col > connection.bcol; col--)
+                    traveledPoints.Add((connection.arow, col));
         }
     }
     
