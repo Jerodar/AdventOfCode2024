@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AdventOfCode2024Input;
 
 namespace AdventOfCode2024;
@@ -52,11 +53,8 @@ public static class Day18
             }
         }
 
-        public void RemoveNode(int row, int col)
+        public void RemoveNode(Node toRemove)
         {
-            var toRemove = GetNode(row, col);
-            if (toRemove == null) return;
-            
             foreach (var connection in toRemove.Connections)
                 connection.ConnectedNode.RemoveConnection(toRemove);
             Nodes.Remove(toRemove);
@@ -76,30 +74,44 @@ public static class Day18
         var graph = FillGraph(max, bytes);
         
         var start = graph.GetNode(0, 0) ?? new Node();
-        var end = graph.GetNode(max-1, max-1) ?? new Node();
+        var goal = graph.GetNode(max-1, max-1) ?? new Node();
         
-        DijkstraSearch(graph, start, end);
+        DijkstraSearch(start, goal);
         
-        var shortestPath = GetShortestPath(end);
+        var shortestPath = GetShortestPath(goal);
         
         Console.WriteLine($"Shortest Path length: {shortestPath.Count}");
         
         Console.WriteLine();
         Console.WriteLine("Day 18 Part Two");
 
-        for (int i = byteCount; i < allBytes.Count; i++)
+        var blockingByte = (0, 0);
+        TimeSpan time = Time(() =>
         {
-            var nextByte = allBytes[i];
-            graph.RemoveNode(nextByte.row, nextByte.col);
-            graph.Reset();
+            for (int i = byteCount; i < allBytes.Count; i++)
+            {
+                var nextByte = allBytes[i];
             
-            DijkstraSearch(graph, start, end);
+                var node = graph.GetNode(nextByte.row, nextByte.col);
+                if (node == null) continue;
+                graph.RemoveNode(node);
             
-            if (end.MinCostToStart != 0) continue;
+                // if removed node is not in the shortest path there is no need to recalculate
+                if(!shortestPath.Contains(node)) continue;
             
-            Console.WriteLine($"Byte that blocked path: {nextByte}");
-            break;
-        }
+                graph.Reset();
+                DijkstraSearch(start, goal);
+            
+                if (goal.MinCostToStart == 0)
+                {
+                    blockingByte = nextByte;
+                    break;
+                }
+            
+                shortestPath = GetShortestPath(goal);
+            }
+        });
+        Console.WriteLine($"Byte that blocked path: {blockingByte}. Found in {time.TotalMilliseconds}ms.");
     }
 
     private static Graph FillGraph(int max, List<(int col, int row)> walls)
@@ -134,7 +146,7 @@ public static class Day18
         return graph;
     }
 
-    private static void DijkstraSearch(Graph graph, Node start, Node goal)
+    private static void DijkstraSearch(Node start, Node goal)
     {
         start.MinCostToStart = 0;
         var queue = new List<Node> { start };
@@ -172,5 +184,13 @@ public static class Day18
         }
 
         return shortestPath;
+    }
+    
+    private static TimeSpan Time(Action action)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        action();
+        stopwatch.Stop();
+        return stopwatch.Elapsed;
     }
 }
