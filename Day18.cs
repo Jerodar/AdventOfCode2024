@@ -19,6 +19,12 @@ public static class Day18
                     select connection.ConnectedNode).Any())
                 Connections.Add(newConnection);
         }
+
+        public void RemoveConnection(Node node)
+        {
+            var toRemove = (from connection in Connections where connection.ConnectedNode == node select connection).FirstOrDefault();
+            if(toRemove != null) Connections.Remove(toRemove);
+        }
     }
     
     private class Connection
@@ -34,6 +40,26 @@ public static class Day18
         public Node? GetNode(int row, int col)
         {
             return (from node in Nodes where node.Position.row == row && node.Position.col == col select node).FirstOrDefault();
+        }
+
+        public void Reset()
+        {
+            foreach (var node in Nodes)
+            {
+                node.Visited = false;
+                node.NearestToStart = null;
+                node.MinCostToStart = 0;
+            }
+        }
+
+        public void RemoveNode(int row, int col)
+        {
+            var toRemove = GetNode(row, col);
+            if (toRemove == null) return;
+            
+            foreach (var connection in toRemove.Connections)
+                connection.ConnectedNode.RemoveConnection(toRemove);
+            Nodes.Remove(toRemove);
         }
     }
 
@@ -57,6 +83,23 @@ public static class Day18
         var shortestPath = GetShortestPath(end);
         
         Console.WriteLine($"Shortest Path length: {shortestPath.Count}");
+        
+        Console.WriteLine();
+        Console.WriteLine("Day 18 Part Two");
+
+        for (int i = byteCount; i < allBytes.Count; i++)
+        {
+            var nextByte = allBytes[i];
+            graph.RemoveNode(nextByte.row, nextByte.col);
+            graph.Reset();
+            
+            DijkstraSearch(graph, start, end);
+            
+            if (end.MinCostToStart != 0) continue;
+            
+            Console.WriteLine($"Byte that blocked path: {nextByte}");
+            break;
+        }
     }
 
     private static Graph FillGraph(int max, List<(int col, int row)> walls)
