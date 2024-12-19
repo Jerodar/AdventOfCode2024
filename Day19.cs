@@ -93,22 +93,36 @@ public static class Day19
             return currentNode.Terminates;
         }
 
+        private Dictionary<string,long> _cache = new();
+
         public long RecursiveFindCount(string target)
         {
+            _cache = new Dictionary<string, long>();
+            return FindCount(target);
+        }
+        private long FindCount(string target)
+        {
+            if (_cache.ContainsKey(target)) return _cache[target];
+            
             long count = 0;
             var currentNode = GetChild(target[^1]);
             if (currentNode == null) return count;
             
             for (int i = target.Length - 2; i >= 0; i--)
             {
-                if (currentNode.Terminates) count += RecursiveFindCount(target[..(i+1)]);
+                if (currentNode.Terminates) count += FindCount(target[..(i+1)]);
                 
                 var nextNode = currentNode.GetChild(target[i]);
-                if (nextNode == null) return count;
+                if (nextNode == null)
+                {
+                    _cache.Add(target, count);
+                    return count;
+                }
 
                 currentNode = nextNode;
             }
             if (currentNode.Terminates) count++;
+            _cache.Add(target, count);
             return count;
         }
         
