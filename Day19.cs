@@ -92,6 +92,25 @@ public static class Day19
             
             return currentNode.Terminates;
         }
+
+        public long RecursiveFindCount(string target)
+        {
+            long count = 0;
+            var currentNode = GetChild(target[^1]);
+            if (currentNode == null) return count;
+            
+            for (int i = target.Length - 2; i >= 0; i--)
+            {
+                if (currentNode.Terminates) count += RecursiveFindCount(target[..(i+1)]);
+                
+                var nextNode = currentNode.GetChild(target[i]);
+                if (nextNode == null) return count;
+
+                currentNode = nextNode;
+            }
+            if (currentNode.Terminates) count++;
+            return count;
+        }
         
         private Node? GetChild(char c)
         {
@@ -111,7 +130,7 @@ public static class Day19
             tree.Add(towel);
         tree.PrintTree();
 
-        var count = 0;
+        long count = 0;
         foreach (string design in designs)
         {
             if (tree.RecursiveFind(design))
@@ -123,6 +142,17 @@ public static class Day19
             {
                 Console.WriteLine($"Failed {design}");
             }
+        }
+        Console.WriteLine(count);
+        
+        Console.WriteLine();
+        Console.WriteLine("Day 19 Part Two");
+        count = 0;
+        foreach (string design in designs)
+        {
+            var designCount = tree.RecursiveFindCount(design);
+            Console.WriteLine($"{designCount} - {design}");
+            count += designCount;
         }
         Console.WriteLine(count);
     }
