@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using AdventOfCode2024Input;
 
 namespace AdventOfCode2024;
@@ -7,7 +6,7 @@ public static class Day17
 {
     public static void Run()
     {
-        Console.WriteLine("Day 15 Part One");
+        Console.WriteLine("Day 17 Part One");
 
         (int a, int b, int c) registers = PuzzleData.GetDay17Registers();
         List<int> program = PuzzleData.GetDay17Program();
@@ -17,7 +16,7 @@ public static class Day17
         var output = computer.Run(program);
         Console.WriteLine(output);
         
-        Console.WriteLine("Day 15 Part Two");
+        Console.WriteLine("Day 17 Part Two");
         
         var expected = "";
         foreach (var i in program)
