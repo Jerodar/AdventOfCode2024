@@ -1,4 +1,3 @@
-using System.Xml.Schema;
 using AdventOfCode2024Input;
 
 namespace AdventOfCode2024;
@@ -23,6 +22,13 @@ public static class Day20
         (int row, int col) start = FindStart(map);
         Dictionary<(int row, int col), int> path = GetPath(map, start);
         var shortcuts = FindShortcuts(path);
+        
+        Console.WriteLine($"Total: {shortcuts.Count}");
+
+        Console.WriteLine();
+        Console.WriteLine("Day 20 Part Two");
+        
+        shortcuts = FindLongShortcuts(path);
         
         Console.WriteLine($"Total: {shortcuts.Count}");
     }
@@ -72,23 +78,41 @@ public static class Day20
         return path;
     }
 
-    private static Dictionary<(int,int,int,int),int> FindShortcuts(Dictionary<(int row, int col), int> path)
+    private static Dictionary<((int,int),(int,int)),int> FindShortcuts(Dictionary<(int row, int col), int> path)
     {
-        var shortcuts = new Dictionary<(int,int,int,int),int>();
+        var shortcuts = new Dictionary<((int,int),(int,int)),int>();
         const int minProfit = 100;
         foreach (var (pos, cost) in path)
         {
             if (path.ContainsKey((pos.row + 2, pos.col)) && !path.ContainsKey((pos.row + 1, pos.col)) && (path[(pos.row + 2, pos.col)] - cost - 2) >= minProfit)
-                shortcuts.Add((pos.row,pos.col, pos.row + 2, pos.col), path[(pos.row + 2, pos.col)] - cost - 2);
+                shortcuts.Add((pos, (pos.row + 2, pos.col)), path[(pos.row + 2, pos.col)] - cost - 2);
             
             if (path.ContainsKey((pos.row - 2, pos.col)) && !path.ContainsKey((pos.row - 1, pos.col)) && (path[(pos.row - 2, pos.col)] - cost - 2) >= minProfit)
-                shortcuts.Add((pos.row,pos.col, pos.row - 2, pos.col), path[(pos.row - 2, pos.col)] - cost - 2);
+                shortcuts.Add((pos, (pos.row - 2, pos.col)), path[(pos.row - 2, pos.col)] - cost - 2);
             
             if (path.ContainsKey((pos.row, pos.col + 2)) && !path.ContainsKey((pos.row, pos.col + 1)) && (path[(pos.row, pos.col + 2)] - cost - 2) >= minProfit)
-                shortcuts.Add((pos.row,pos.col, pos.row, pos.col + 2), path[(pos.row, pos.col + 2)] - cost - 2);
+                shortcuts.Add((pos, (pos.row, pos.col + 2)), path[(pos.row, pos.col + 2)] - cost - 2);
             
             if (path.ContainsKey((pos.row, pos.col - 2)) && !path.ContainsKey((pos.row, pos.col - 1)) && (path[(pos.row, pos.col - 2)] - cost - 2) >= minProfit)
-                shortcuts.Add((pos.row,pos.col, pos.row, pos.col - 2), path[(pos.row, pos.col - 2)] - cost - 2);
+                shortcuts.Add((pos, (pos.row, pos.col - 2)), path[(pos.row, pos.col - 2)] - cost - 2);
+        }
+
+        return shortcuts;
+    }
+    
+    private static Dictionary<((int,int),(int,int)),int> FindLongShortcuts(Dictionary<(int row, int col), int> path)
+    {
+        var shortcuts = new Dictionary<((int,int),(int,int)),int>();
+        const int minProfit = 100;
+        foreach (var (startPos, startCost) in path)
+        {
+            foreach (var (endPos, endCost) in path)
+            {
+                var distance = Math.Abs(startPos.row - endPos.row) + Math.Abs(startPos.col - endPos.col);
+                if (distance > 20) continue;
+                if((endCost - startCost - distance) >= minProfit)  
+                    shortcuts.TryAdd((startPos, endPos), endCost - startCost - distance);
+            }
         }
 
         return shortcuts;
