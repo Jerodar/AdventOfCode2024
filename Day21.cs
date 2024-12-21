@@ -2,18 +2,21 @@ using AdventOfCode2024Input;
 
 namespace AdventOfCode2024;
 
-public static class Day21
+public class Day21
 {
-    public static void Run()
+    private const int NumPadDir = 25;
+    private readonly Dictionary<(char, char, int),long> _cache = new();
+    
+    public void Run()
     {
         Console.WriteLine("Day 21 Part One");
 
-        string[] codes = PuzzleData.GetDay21CodesTest();
-
+        string[] codes = PuzzleData.GetDay21Codes();
+        
         var robotNum = 'A';
         var robotDir1 = 'A';
         var robotDir2 = 'A';
-        var totalComplexity = 0;
+        long totalComplexity = 0;
         foreach (string code in codes)
         {
             Console.WriteLine($"calculating code {code}");
@@ -28,7 +31,6 @@ public static class Day21
                 {
                     var dir2Code = GoToNextDir(robotDir1, c2);
                     robotDir1 = c2;
-                    Console.Write(dir2Code + " ");
 
                     foreach (char c3 in dir2Code)
                     {
@@ -40,16 +42,67 @@ public static class Day21
                 }
                 result += newResult;
             }
-            Console.WriteLine();
             Console.WriteLine(result);
             int numeric = int.Parse(code[..^1]);
             int complexity = numeric * result.Length;
-            Console.WriteLine(complexity);
+            Console.WriteLine($"{result.Length} * {numeric}");
+            Console.WriteLine();
             totalComplexity += complexity;
+        }
+        Console.WriteLine($"Total complexity: {totalComplexity}");
+        Console.WriteLine();
+        Console.WriteLine("Day 21 Part Two");
+        
+        totalComplexity = 0;
+        foreach (string code in codes)
+        {
+            Console.WriteLine($"calculating code {code}");
+            long cost = 0;
+            var prevChar = 'A';
+            foreach (char c in code)
+            {
+                var subResult = GoToNextNumber(prevChar, c);
+                prevChar = c;
+
+                cost += GetCost(subResult, NumPadDir);
+            }
+            int numeric = int.Parse(code[..^1]);
+            long complexity = numeric * cost;
+            totalComplexity += complexity;
+            
+            Console.WriteLine($"{cost} * {numeric}");
+            Console.WriteLine();
         }
         Console.WriteLine($"Total complexity: {totalComplexity}");
     }
 
+    private long GetCost(string code, int numpadCount)
+    {
+        if (numpadCount == 0)
+        {
+            return code.Length;
+        }
+        
+        long cost = 0;
+        var prevChar = 'A';
+        foreach (char c in code)
+        {
+            if (!_cache.ContainsKey((prevChar, c, numpadCount)))
+            {
+                var nextCode = GoToNextDir(prevChar, c);
+                var newCost = GetCost(nextCode, numpadCount-1);
+                _cache.Add((prevChar, c, numpadCount), newCost);
+                cost += newCost;
+            }
+            else
+            {
+                cost += _cache[(prevChar, c, numpadCount)];
+            }
+            prevChar = c;
+        }
+        return cost;
+    }
+    
     private static string GoToNextDir(char current, char next)
     {
         return (current, next) switch
@@ -70,7 +123,7 @@ public static class Day21
             ('v', '<') => "<A",
             ('v', 'v') => "A",
             ('v', '>') => ">A",
-            ('v', 'A') => ">^A",
+            ('v', 'A') => "^>A",
             
             ('>', '^') => "<^A",
             ('>', '<') => "<<A",
@@ -80,7 +133,7 @@ public static class Day21
             
             ('A', '^') => "<A",
             ('A', '<') => "v<<A",
-            ('A', 'v') => "v<A",
+            ('A', 'v') => "<vA",
             ('A', '>') => "vA",
             ('A', 'A') => "A",
 
